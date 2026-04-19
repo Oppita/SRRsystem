@@ -1,12 +1,11 @@
 services:
   - type: web
     name: srrsystem
-    runtime: node
+    runtime: docker
     plan: free
-    buildCommand: npm install
-    startCommand: npm run start
+    dockerfilePath: ./Dockerfile
     envVars:
       - key: GEMINI_API_KEY
         sync: false
-      - key: NODE_VERSION
-        value: 20
+      - key: PORT
+        value: 10000
