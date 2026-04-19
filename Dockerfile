@@ -17,20 +17,19 @@ RUN npm run build
 FROM node:22-alpine
 WORKDIR /app
 
-# Copiar dist y archivos necesarios
-COPY --from=builder /app/dist ./dist
+# Copiar archivos necesarios
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/server.ts ./
+COPY --from=builder /app/dist ./dist
 
-# Instalar SOLO dependencias de producción + tsx
+# Instalar dependencias de producción + tsx
 RUN npm install --legacy-peer-deps --production && \
     npm install tsx --legacy-peer-deps
 
 # Variables de entorno
 ENV NODE_ENV=production
-ENV PORT=10000
 
 EXPOSE 10000
 
-# Iniciar con tsx
+# Iniciar servidor
 CMD ["npx", "tsx", "server.ts"]
