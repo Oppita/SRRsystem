@@ -61,12 +61,9 @@ app.post('/api/openrouter', async (req, res) => {
       }
     };
 
-    // Limit max_tokens to avoid 402 errors and ensure reasonable output
     completionParams.max_tokens = config?.maxOutputTokens || 4000;
 
     if (config?.responseMimeType === 'application/json') {
-      // We don't use response_format: { type: 'json_object' } here because many free OpenRouter models don't support it.
-      // Instead, we rely on the system prompt to enforce JSON output.
       if (!messages.some((m: any) => m.role === 'system')) {
         messages.unshift({
           role: 'system',
@@ -79,7 +76,7 @@ app.post('/api/openrouter', async (req, res) => {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        'HTTP-Referer': 'https://ungrd-app.com', // Required by OpenRouter for free models
+        'HTTP-Referer': 'https://ungrd-app.com',
         'X-Title': 'UNGRD App',
         'Content-Type': 'application/json'
       },
@@ -129,7 +126,6 @@ function getAiClient() {
       return null;
     }
     const apiKey = envKey.trim().replace(/^["']|["']$/g, '');
-    // Only block if it's the literal placeholder from .env.example
     if (apiKey === 'MY_GEMINI_API_KEY' || apiKey === '') {
       console.warn('GEMINI_API_KEY is a placeholder or empty. Gemini features will be disabled.');
       return null;
@@ -221,7 +217,7 @@ app.post('/api/process-pot', upload.single('pot'), async (req: any, res: any) =>
   try {
     const dataBuffer = fs.readFileSync(req.file.path);
     const data = await pdf(dataBuffer);
-    const text = data.text.substring(0, 30000); // Limit text to avoid token limits
+    const text = data.text.substring(0, 30000);
 
     fs.unlinkSync(req.file.path);
 
@@ -251,7 +247,7 @@ app.post('/api/process-pot', upload.single('pot'), async (req: any, res: any) =>
             responseMimeType: 'application/json',
           }
         });
-        break; // Success, exit loop
+        break;
       } catch (err: any) {
         const errorMessage = err?.message || (typeof err === 'string' ? err : JSON.stringify(err));
         const isRetryable = errorMessage && (errorMessage.includes('429') || errorMessage.includes('RESOURCE_EXHAUSTED') || errorMessage.includes('503') || errorMessage.includes('UNAVAILABLE'));
@@ -259,7 +255,6 @@ app.post('/api/process-pot', upload.single('pot'), async (req: any, res: any) =>
         if (isRetryable) {
           console.warn(`Gemini API overloaded in process-pot, retrying... (${retries} left)`);
           
-          // Try fallback model on last retry
           if (retries === 1) {
             console.warn("Falling back to gemini-3.1-flash-lite-preview");
             try {
@@ -317,23 +312,26 @@ app.post('/api/extract-pdf-text', upload.single('file'), async (req: any, res: a
 import { createServer as createViteServer } from 'vite';
 
 async function startServer() {
-  if (process.env.NODE_ENV !== 'production') {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: 'spa',
-    });
-    app.use(vite.middlewares);
-  } else {
+  if (process.env.NODE_ENV === 'production') {
+    // PRODUCCIÓN - servir archivos estáticos desde dist
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
     app.get('*', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });
+  } else {
+    // DESARROLLO - Vite dev server
+    const vite = await createViteServer({
+      server: { middlewareMode: true },
+      appType: 'spa',
+    });
+    app.use(vite.middlewares);
   }
 
-  const port = 3000;
+  const port = process.env.PORT || 10000;
   app.listen(port, '0.0.0.0', () => {
-    console.log(`Server running on http://localhost:${port}`);
+    console.log(`Server running on port ${port}`);
+    console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
   });
 }
 
