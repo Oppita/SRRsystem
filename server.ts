@@ -6,6 +6,10 @@ const pdf = require('pdf-parse');
 import { GoogleGenAI, Type } from '@google/genai';
 import path from 'path';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const upload = multer({ dest: 'uploads/' });
@@ -308,31 +312,24 @@ app.post('/api/extract-pdf-text', upload.single('file'), async (req: any, res: a
   }
 });
 
-// Vite middleware setup
-import { createServer as createViteServer } from 'vite';
-
-async function startServer() {
-  if (process.env.NODE_ENV === 'production') {
-    // PRODUCCIÓN - servir archivos estáticos desde dist
-    const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
-    });
-  } else {
-    // DESARROLLO - Vite dev server
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: 'spa',
-    });
-    app.use(vite.middlewares);
-  }
-
-  const port = process.env.PORT || 10000;
-  app.listen(port, '0.0.0.0', () => {
-    console.log(`Server running on port ${port}`);
-    console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
+// 🔥 PRODUCCIÓN - Servir archivos estáticos
+if (process.env.NODE_ENV === 'production') {
+  const distPath = path.join(__dirname, 'dist');
+  
+  console.log('📂 Serving static files from:', distPath);
+  console.log('📂 Dist exists?', fs.existsSync(distPath));
+  
+  // 👇 PRIMERO archivos estáticos
+  app.use(express.static(distPath));
+  
+  // 👇 DESPUÉS fallback SPA
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(distPath, 'index.html'));
   });
 }
 
-startServer();
+const port = process.env.PORT || 10000;
+app.listen(port, '0.0.0.0', () => {
+  console.log(`✅ Server running on port ${port}`);
+  console.log(`📦 NODE_ENV: ${process.env.NODE_ENV}`);
+});
