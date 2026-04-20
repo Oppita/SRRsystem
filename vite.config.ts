@@ -1,17 +1,15 @@
-import tailwindcss from '@tailwindcss/vite';
-import react from '@vitejs/plugin-react';
-import path from 'path';
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  base: '/SRRsystem/',
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, '.'),
-    },
-  },
+  base: '/',  // ✅ CAMBIADO de '/SRRsystem/' a '/'
   server: {
-    hmr: process.env.DISABLE_HMR !== 'true',
+    port: 5173,
   },
-});
+  build: {
+    outDir: 'dist',
+    sourcemap: false,
+  },
+})
