@@ -8,6 +8,44 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 
+// Al inicio del archivo, después de los imports
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// ... todo tu código de APIs ...
+
+// 🔥 PRODUCCIÓN - Servir archivos estáticos
+if (process.env.NODE_ENV === 'production') {
+  const distPath = path.resolve(process.cwd(), 'dist');  // ✅ MÁS ROBUSTO
+  
+  console.log('📂 Serving static files from:', distPath);
+  console.log('📂 __dirname:', __dirname);
+  console.log('📂 process.cwd():', process.cwd());
+  console.log('📂 Dist exists?', fs.existsSync(distPath));
+  
+  if (fs.existsSync(distPath)) {
+    const files = fs.readdirSync(distPath);
+    console.log('📂 Files in dist:', files);
+  }
+  
+  // 👇 PRIMERO archivos estáticos
+  app.use(express.static(distPath));
+  
+  // 👇 DESPUÉS fallback SPA
+  app.get('*', (req, res) => {
+    console.log('🔄 Fallback triggered for:', req.path);
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+}
+
+const port = process.env.PORT || 10000;
+app.listen(port, '0.0.0.0', () => {
+  console.log(`✅ Server running on port ${port}`);
+  console.log(`📦 NODE_ENV: ${process.env.NODE_ENV}`);
+});
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
