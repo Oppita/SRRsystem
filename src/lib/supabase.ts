@@ -12,4 +12,7 @@ if (!isSupabaseConfigured) {
 export const supabase = createClient(
   supabaseUrl || 'https://falta-configurar-url.supabase.co', 
   supabaseAnonKey || 'falta-configurar-key'
+
+  console.log("SUPABASE URL:", import.meta.env.VITE_SUPABASE_URL);
+console.log("SUPABASE KEY:", import.meta.env.VITE_SUPABASE_ANON_KEY ? "OK" : "MISSING");
 );
