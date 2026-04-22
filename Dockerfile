@@ -9,6 +9,10 @@ COPY package*.json ./
 RUN npm install --legacy-peer-deps
 
 COPY . .
+
+# 🔥 IMPORTANTE: Vite lee este archivo en build
+COPY .env.production .env.production
+
 RUN npm run build
 
 # =========================
